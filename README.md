@@ -146,7 +146,7 @@ datasource.es.maxActive=20
 > 协议不区分大小写，参数可选。但是无论是否有参数，只要有restMapping，`?`必须带上
 
 **注意**
-所有的增删改查都可以包裹在<select>中，如果是包裹在<select>中，都可以在java中通过以下方式获取结果
+所有的增删改查都可以包裹在`<select>`中，如果是包裹在`<select>`中，都可以在java中通过以下方式获取结果
 
 ```java
 Map result = session.selectOne("xxx",param);
@@ -156,9 +156,10 @@ JestResult result = JestUtil.getExecuteResult(result);
 SearchResult result = JestUtil.getQueryResult(result);
 ```
 
-如果增删改是包裹在对应的`<insert>`、`<update>`和`<delete>`中，通过session.insert、session.update、session.delete操作返回的整形数字不是关系型数据库中影响的行数，而是http状态码，2xx系列状态码表示操作成功，如果操作失败，并不会返回具体的错误信息，程序也不会报错。如果需要具体的操作信息，只能使用<select>包裹，返回`JestResult`对象，再调用相应的方法获取具体信息。
+如果增删改是包裹在对应的`<insert>`、`<update>`和`<delete>`中，通过session.insert、session.update、session.delete操作返回的整形数字不是关系型数据库中影响的行数，而是http状态码，2xx系列状态码表示操作成功，如果操作失败，并不会返回具体的错误信息，程序也不会报错。如果需要具体的操作信息，只能使用`<select>`包裹，返回`JestResult`对象，再调用相应的方法获取具体信息。
 
-> 操作elasticsearch时，在mybatis的xml中只能使用${}而不是#{}，因为elasticsearch并不是数据库，并没有数据库元数据，后续考虑会构建一个elasticsearch的元数据对象。
+
+>  操作elasticsearch时，在mybatis的xml中只能使用`${}`而不是`#{}`，因为elasticsearch并不是数据库，并没有数据库元数据，后续考虑会构建一个elasticsearch的元数据对象。
 
 
 #### 测试
