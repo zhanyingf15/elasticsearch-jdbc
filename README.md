@@ -156,13 +156,14 @@ JestResult result = JestUtil.getExecuteResult(result);
 SearchResult result = JestUtil.getQueryResult(result);
 ```
 
-如果增删改是包裹在对应的<insert>、<update>和<delete>中，通过session.insert、session.update、session.delete操作返回的整形数字不是关系型数据库中影响的行数，而是http状态码，2xx系列状态码表示操作成功，如果操作失败，并不会返回具体的错误信息，程序也不会报错。如果需要具体的操作信息，只能使用<select>包裹，返回`JestResult`对象，再调用相应的方法获取具体信息。
+如果增删改是包裹在对应的`<insert>`、`<update>`和`<delete>`中，通过session.insert、session.update、session.delete操作返回的整形数字不是关系型数据库中影响的行数，而是http状态码，2xx系列状态码表示操作成功，如果操作失败，并不会返回具体的错误信息，程序也不会报错。如果需要具体的操作信息，只能使用<select>包裹，返回`JestResult`对象，再调用相应的方法获取具体信息。
 
 > 操作elasticsearch时，在mybatis的xml中只能使用${}而不是#{}，因为elasticsearch并不是数据库，并没有数据库元数据，后续考虑会构建一个elasticsearch的元数据对象。
 
+
 #### 测试
 
-service
+service业务层
 
 ```java
 @Resource(name = "defaultSQLSessionTemplate-es")
@@ -175,11 +176,11 @@ public Map<String,Object> qryJest(Map param){
 }
 ```
 
-main.java
+main方法
 
 ```java
 ClassPathXmlApplicationContext ac = new ClassPathXmlApplicationContext("classpath:applicationContext.xml");
-        ac.start();
+ac.start();
 SqlSessionTemplate esSession = SpringBeanUtil.getInstance().getBean("defaultSQLSessionTemplate-es",SqlSessionTemplate.class);
 ESTestServiceImpl esTestService = SpringBeanUtil.getInstance().getBean("esTestService",ESTestServiceImpl.class);
 Map param = new HashMap();
