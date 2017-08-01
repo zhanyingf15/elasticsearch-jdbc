@@ -1,6 +1,6 @@
 # elasticsearch-jdbc
 
-该项目最先是在[elasticsearch-sql](https://github.com/NLPchina/elasticsearch-sql)的[实验特性项目](https://github.com/NLPchina/elasticsearch-sql/pull/283)的基础上修改而来,修改和补充了部分jdbc规范，使之能够和mybatis整合，sql支持度可参考elasticsearch-sql，引入了[jest](https://github.com/searchbox-io/Jest)，实现了mybatis+rest api的方式操作elasticsearch。提供了Java api的工具类`ESUtil`和rest api工具类`JestUtil`。
+该项目最先是在[elasticsearch-sql](https://github.com/NLPchina/elasticsearch-sql)的[实验特性项目](https://github.com/NLPchina/elasticsearch-sql/pull/283)的基础上修改而来,修改和补充了部分jdbc规范，使之能够和mybatis结合，sql支持度可参考elasticsearch-sql，引入了[jest](https://github.com/searchbox-io/Jest)，实现了mybatis+rest api的方式操作elasticsearch。提供了Java api的工具类`ESUtil`和rest api工具类`JestUtil`。
 
 ### 使用方式
 
