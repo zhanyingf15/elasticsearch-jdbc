@@ -15,6 +15,13 @@
     <druid.version>1.0.16</druid.version>
   </properties>
 
+  <distributionManagement>
+    <repository>
+      <id>wjj-maven-repo</id>
+      <url>file:D:/wjj/github/maven-repo</url>
+    </repository>
+  </distributionManagement>
+
   <dependencies>
     <dependency>
       <groupId>javax.servlet</groupId>
