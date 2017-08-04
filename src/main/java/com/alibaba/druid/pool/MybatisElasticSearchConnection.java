@@ -27,6 +27,7 @@ public class MybatisElasticSearchConnection extends ElasticSearchConnection {
     public void close() throws SQLException {
         this.getClient().close();
         logger.info("关闭连接");
+        System.err.println("connection close:"+Thread.currentThread().getName());
     }
     @Override
     public DatabaseMetaData getMetaData() throws SQLException {

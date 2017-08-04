@@ -82,9 +82,9 @@ public class MybatisElasticSearchDruidPooledConnection extends ElasticSearchDrui
         stmtHolder.incrementInUseCount();
         holder.getDataSource().initStatement(this, stmtHolder.getStatement());
     }
-    @Override
+    /*@Override
     public void close() throws SQLException {
-        if (isDisable()) {
+        *//*if (isDisable()) {
             return;
         }
         if(this.holder==null){
@@ -97,7 +97,11 @@ public class MybatisElasticSearchDruidPooledConnection extends ElasticSearchDrui
             psh.getStatement().close();
         }
         this.holder.setDiscard(true);
-        this.getConnection().close();
-    }
+        this.getConnection().close();*//*
+        super.close();
+//        DruidAbstractDataSource dataSource = holder.getDataSource();
+        System.err.println("close:"+Thread.currentThread().getName());
+//        System.err.println("active:"+dataSource.getActiveConnections().size());
+    }*/
 
 }
