@@ -18,32 +18,64 @@ import java.util.regex.Pattern;
  * Created by wjj on 2017/6/21.
  */
 public class JestUtil {
+    public static JestClient jestClient = null;
+    private static Map properties = null;
     private JestUtil(){}
-
-    private static class ClientHolder{
-        public static JestClient jestClient = createJestClient();
-        private static JestClient createJestClient(){
-            String jdbcUrl = PropertiesUtil.getValue("datasource.es.http.host");//从配置文件中获取配置信息
-            if(StringUtils.isBlank(jdbcUrl)){
-                throw new RuntimeException("缺少datasource.es.host配置项，创建JestClient失败");
+    public static void initJestClient(Map properties){
+        JestUtil.properties = properties;
+        if(jestClient==null){
+            synchronized (JestUtil.class){
+                if(jestClient==null){
+                    jestClient = createJestClient(properties);
+                }
             }
-            JestClientFactory factory = new JestClientFactory();
-            String[] hostAndPortArray = jdbcUrl.split(",");
-            String maxActive = PropertiesUtil.getValue("datasource.es.maxActive","20");
-            factory.setHttpClientConfig(new HttpClientConfig
-                    .Builder(Arrays.asList(hostAndPortArray))
-                    .multiThreaded(true)
-                    //Per default this implementation will create no more than 2 concurrent connections per given route
-//                .defaultMaxTotalConnectionPerRoute(5)
-                    // and no more 20 connections in total
-                    .maxTotalConnection(Integer.parseInt(maxActive))
-                    .build());
-            return factory.getObject();
         }
     }
 
+    /**
+     * 检查jestClient状态
+     */
+    private static void checkJestClient(){
+        if(jestClient==null){
+            initJestClient(properties);
+        }
+    }
+    private static JestClient createJestClient(Map properties){
+        String jdbcUrl = "";
+        String maxActive = "20";
+        try{
+            if(properties != null){
+                jdbcUrl = (String)properties.get("http.url");
+                if(properties.containsKey("maxActive")){
+                    maxActive = (String)properties.get("maxActive");
+                }
+            }else{
+                jdbcUrl = PropertiesUtil.getValue("http.url");//从配置文件中获取配置信息
+                maxActive =PropertiesUtil.getValue("maxActive",maxActive);
+            }
+        }catch (Exception e){
+            throw new RuntimeException("创建Jest客户端错误，未指定正确的配置属性:http.url或maxActive");
+        }
+
+        if(StringUtils.isBlank(jdbcUrl)){
+            throw new RuntimeException("缺少http.url配置项，创建JestClient失败");
+        }
+        JestClientFactory factory = new JestClientFactory();
+        String[] hostAndPortArray = jdbcUrl.split(",");
+
+        factory.setHttpClientConfig(new HttpClientConfig
+                .Builder(Arrays.asList(hostAndPortArray))
+                .multiThreaded(true)
+                //Per default this implementation will create no more than 2 concurrent connections per given route
+//                .defaultMaxTotalConnectionPerRoute(5)
+                // and no more 20 connections in total
+                .maxTotalConnection(Integer.parseInt(maxActive))
+                .build());
+        return factory.getObject();
+    }
     public static JestClient getJestClient(){
-        return ClientHolder.jestClient;
+        checkJestClient();
+        return jestClient;
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.alibaba.druid.pool;
 
+import com.alibaba.druid.jest.JestUtil;
+
 import javax.sql.DataSource;
 import java.util.Map;
 import java.util.Properties;
@@ -12,6 +14,7 @@ public class MybatisElasticSearchDruidDataSourceFactory extends DruidDataSourceF
     protected DataSource createDataSourceInternal(Properties properties) throws Exception {
         DruidDataSource dataSource = new MybatisElasticSearchDruidDataSource();
         config(dataSource, properties);
+        JestUtil.initJestClient(properties);
         return dataSource;
     }
     @SuppressWarnings("rawtypes")
@@ -22,6 +25,7 @@ public class MybatisElasticSearchDruidDataSourceFactory extends DruidDataSourceF
     public static DataSource createDataSource(Map properties) throws Exception {
         DruidDataSource dataSource = new MybatisElasticSearchDruidDataSource();
         config(dataSource, properties);
+        JestUtil.initJestClient(properties);
         return dataSource;
     }
 }

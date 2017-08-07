@@ -68,12 +68,10 @@
 #### 添加elasticsearch.properties 配置文件到classpath
 
 ```properties
-#es java api address，split by "," if have multi address,eg.jdbc:elasticsearch://ip1:port,ip2:port
-datasource.es.host=jdbc:elasticsearch://192.168.70.128:9300
 #es http address，split by "," if have multi address.eg http://ip1:port,http://ip2:port
-datasource.es.http.host=http://192.168.70.128:9200
+http.url=http://192.168.70.128:9200
 #max connection number
-datasource.es.maxActive=20
+maxActive=20
 ```
 
 
@@ -191,3 +189,66 @@ param.put("name","te");
 Map result = esTestService.qryJest(param);
 ```
 
+不依赖spring和mybatis的使用方式
+```java
+/**
+ * Created by wjj on 2017/8/7.
+ * 不依赖spring和mybatis的使用方式
+ */
+public class Test {
+    public static DruidDataSource dataSource = getDataSource();
+    public static DruidDataSource getDataSource(){
+        DruidDataSource dataSource = null;
+        try{
+            Map properties = new HashMap<>();
+            properties.put("url","jdbc:elasticsearch://10.43.164.113:9300");
+            properties.put("http.url","http://10.43.164.113:9200");
+            properties.put("maxActive","20");
+            dataSource = (DruidDataSource) MybatisElasticSearchDruidDataSourceFactory.createDataSource(properties);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return dataSource;
+    }
+    public static void testJDBC() throws Exception{
+        String sql = "select * from bank/account where firstname='Effie'";
+        Connection connection = dataSource.getConnection();
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ResultSet resultSet = ps.executeQuery();
+        while (resultSet.next()) {
+            System.out.println(resultSet.getString("firstname") + "," + resultSet.getInt("age"));
+        }
+        connection.close();
+        dataSource.close();
+    }
+
+    /**
+     * 如果单独使用rest api时不需要创建连接，也可以不创建数据源(需要手动调用initJestClient()初始化客户端)
+     * @throws Exception
+     */
+    public static void testRest() throws Exception{
+//        JestUtil.initJestClient(properties);//该过程在创建数据源时已执行
+        String restStr = "{ " +
+                         " \"query\":{" +
+                         "   \"term\":{ " +
+                         "       \"firstname\":\"effie\"" +
+                         "     }" +
+                         "   }" +
+                         "}";
+        SearchResult result = JestUtil.query(restStr,new String[]{"bank"},new String[]{"account"});
+        List<SearchResult.Hit<Map,Void>> list = result.getHits(Map.class);
+        for(SearchResult.Hit<Map,Void> hit:list){
+            Iterator<Map.Entry<String,Object>> i = hit.source.entrySet().iterator();
+            while(i.hasNext()){
+                Map.Entry<String,Object> entry = i.next();
+                System.out.println(entry.getKey()+":"+entry.getValue());
+            }
+
+        }
+    }
+    public static void main(String[] args) throws Exception{
+        testJDBC();
+        testRest();
+    }
+}
+```
