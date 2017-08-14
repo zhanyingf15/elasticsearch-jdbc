@@ -205,3 +205,28 @@ while (rs.next()){
     System.out.println("firstname:"+rs.getString("firstname")+",balance:"+rs.getInt("balance"));
 }
 ```
+/**
+ * 如果单独使用rest api时不需要创建连接，也可以不创建数据源(需要手动调用initJestClient()初始化客户端)
+ * @throws Exception
+ */
+public static void testRest() throws Exception{
+    //properties就是elasticsearch.properties的配置内容，可以传null，默认从配置文件读取
+    JestUtil.initJestClient(properties);
+    String restStr = "{ " +
+                     " \"query\":{" +
+                     "   \"term\":{ " +
+                     "       \"firstname\":\"effie\"" +
+                     "     }" +
+                     "   }" +
+                     "}";
+    SearchResult result = JestUtil.query(restStr,new String[]{"bank"},new String[]{"account"});
+    List<SearchResult.Hit<Map,Void>> list = result.getHits(Map.class);
+    for(SearchResult.Hit<Map,Void> hit:list){
+        Iterator<Map.Entry<String,Object>> i = hit.source.entrySet().iterator();
+        while(i.hasNext()){
+            Map.Entry<String,Object> entry = i.next();
+            System.out.println(entry.getKey()+":"+entry.getValue());
+        }
+
+    }
+}
