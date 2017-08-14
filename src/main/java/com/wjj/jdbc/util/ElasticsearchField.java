@@ -1,4 +1,4 @@
-package com.wjj.es.util;
+package com.wjj.jdbc.util;
 
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.search.sort.SortOrder;

@@ -1,4 +1,4 @@
-package com.wjj.es.util;
+package com.wjj.jdbc.util;
 
 import org.apache.commons.lang3.StringUtils;
 

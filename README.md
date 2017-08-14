@@ -1,7 +1,8 @@
 # elasticsearch-jdbc
 
-该项目最先是在[elasticsearch-sql](https://github.com/NLPchina/elasticsearch-sql)的[实验特性项目](https://github.com/NLPchina/elasticsearch-sql/pull/283)的基础上修改而来,修改和补充了部分jdbc规范，使之能够和mybatis结合，sql支持度可参考elasticsearch-sql，引入了[jest](https://github.com/searchbox-io/Jest)，实现了mybatis+rest api的方式操作elasticsearch。提供了Java api的工具类`ESUtil`和rest api工具类`JestUtil`。
+2.0.x版本最先是在[elasticsearch-sql](https://github.com/NLPchina/elasticsearch-sql)的[实验特性项目](https://github.com/NLPchina/elasticsearch-sql/pull/283)的基础上修改而来,修改和补充了部分jdbc规范，使之能够和mybatis结合，sql支持度可参考elasticsearch-sql，引入了[jest](https://github.com/searchbox-io/Jest)，实现了mybatis+rest api的方式操作elasticsearch。提供了Java api的工具类`ESUtil`和rest api工具类`JestUtil`。
 
+由于和Druid数据库连接池耦合太大，在使用过程中发现了一系列问题，决定将JDBC和数据库连接池解耦。添加ElasticSearchDriver类。
 ### 使用方式
 
 ####  maven依赖
@@ -19,7 +20,7 @@
 <dependency>
   <groupId>com.wjj</groupId>
   <artifactId>elasticsearch-jdbc</artifactId>
-  <version>2.0.1</version>
+  <version>3.0.0</version>
 </dependency>
 ```
 
@@ -27,10 +28,11 @@
 
 ```xml
 <bean id="defaulteDataSource-es" class="com.alibaba.druid.pool.MybatisElasticSearchDruidDataSource" init-method="init" destroy-method="close">
-		<property name="url" value="jdbc:elasticsearch://192.168.70.128:9300/" />
+		<property name="driverClassName" value="com.wjj.jdbc.elasticsearch.ElasticSearchDriver" />
+		<property name="url" value="${java.url}" />
 		<property name="initialSize" value="2" />
 		<property name="minIdle" value="2" />
-		<property name="maxActive" value="100" />
+		<property name="maxActive" value="${maxActive}" />
 		<property name="maxWait" value="60000" />
 		<property name="timeBetweenEvictionRunsMillis" value="60000" />
 		<property name="minEvictableIdleTimeMillis" value="300000" />
@@ -63,12 +65,15 @@
 	</bean>
 ```
 
->  elasticsearch-jdbc只能使用阿里的druid数据源
 
 #### 添加elasticsearch.properties 配置文件到classpath
+elasticsearch.properties配置文件是必须的，可以直接如上面代码引入到spring配置文件中。java.url是TransportClient的地址，http.url是REST接口地址
+
 
 ```properties
-#es http address，split by "," if have multi address.eg http://ip1:port,http://ip2:port
+#es java TransportClient address，split by "," if have multi address,eg.jdbc:elasticsearch://ip1:port,ip2:port
+java.url=jdbc:elasticsearch://192.168.70.128:9300
+#es rest http address，split by "," if have multi address.eg http://ip1:port,http://ip2:port
 http.url=http://192.168.70.128:9200
 #max connection number
 maxActive=20
@@ -189,66 +194,13 @@ param.put("name","te");
 Map result = esTestService.qryJest(param);
 ```
 
-不依赖spring和mybatis的使用方式
+JDBC测试
 ```java
-/**
- * Created by wjj on 2017/8/7.
- * 不依赖spring和mybatis的使用方式
- */
-public class Test {
-    public static DruidDataSource dataSource = getDataSource();
-    public static DruidDataSource getDataSource(){
-        DruidDataSource dataSource = null;
-        try{
-            Map properties = new HashMap<>();
-            properties.put("url","jdbc:elasticsearch://10.43.164.113:9300");
-            properties.put("http.url","http://10.43.164.113:9200");
-            properties.put("maxActive","20");
-            dataSource = (DruidDataSource) MybatisElasticSearchDruidDataSourceFactory.createDataSource(properties);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return dataSource;
-    }
-    public static void testJDBC() throws Exception{
-        String sql = "select * from bank/account where firstname='Effie'";
-        Connection connection = dataSource.getConnection();
-        PreparedStatement ps = connection.prepareStatement(sql);
-        ResultSet resultSet = ps.executeQuery();
-        while (resultSet.next()) {
-            System.out.println(resultSet.getString("firstname") + "," + resultSet.getInt("age"));
-        }
-        connection.close();
-        dataSource.close();
-    }
-
-    /**
-     * 如果单独使用rest api时不需要创建连接，也可以不创建数据源(需要手动调用initJestClient()初始化客户端)
-     * @throws Exception
-     */
-    public static void testRest() throws Exception{
-//        JestUtil.initJestClient(properties);//该过程在创建数据源时已执行
-        String restStr = "{ " +
-                         " \"query\":{" +
-                         "   \"term\":{ " +
-                         "       \"firstname\":\"effie\"" +
-                         "     }" +
-                         "   }" +
-                         "}";
-        SearchResult result = JestUtil.query(restStr,new String[]{"bank"},new String[]{"account"});
-        List<SearchResult.Hit<Map,Void>> list = result.getHits(Map.class);
-        for(SearchResult.Hit<Map,Void> hit:list){
-            Iterator<Map.Entry<String,Object>> i = hit.source.entrySet().iterator();
-            while(i.hasNext()){
-                Map.Entry<String,Object> entry = i.next();
-                System.out.println(entry.getKey()+":"+entry.getValue());
-            }
-
-        }
-    }
-    public static void main(String[] args) throws Exception{
-        testJDBC();
-        testRest();
-    }
+Class.forName("com.wjj.jdbc.elasticsearch.ElasticSearchDriver");
+Connection conn = DriverManager.getConnection("jdbc:elasticsearch://192.168.70.128:9300");
+PreparedStatement stmt = conn.prepareStatement("select * from bank");
+ResultSet rs = stmt.executeQuery();
+while (rs.next()){
+    System.out.println("firstname:"+rs.getString("firstname")+",balance:"+rs.getInt("balance"));
 }
 ```

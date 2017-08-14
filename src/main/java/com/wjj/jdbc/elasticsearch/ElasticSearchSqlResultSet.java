@@ -1,8 +1,5 @@
-package com.alibaba.druid.pool;
-
-import com.alibaba.druid.mock.MockClob;
-import com.alibaba.druid.util.jdbc.ResultSetMetaDataBase;
-
+package com.wjj.jdbc.elasticsearch;
+import javax.sql.rowset.serial.SerialClob;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -16,16 +13,16 @@ import java.util.Map;
 /**
  * Created by wjj on 2017/5/26.
  */
-public class MybatisElasticSearchResultSet  implements ResultSet {
+public class ElasticSearchSqlResultSet implements ResultSet {
     Iterator<List<Object>> iterator;
     List<Object> current = null;
     List<String> headers = null;
     private ResultSetMetaData metaData;
 
-    public MybatisElasticSearchResultSet(Statement statement, final List<String> headers, final List<List<Object>> lines){
+    public ElasticSearchSqlResultSet(Statement statement, final List<String> headers, final List<List<Object>> lines){
         this.iterator = lines.iterator();
         this.headers = headers;
-        this.metaData = new MybatisElasticSearchResultSetMetaDataBase(headers);
+        this.metaData = new ElasticSearchSqlResultSetMetaDataBase(headers);
     }
     @Override
     public boolean next() throws SQLException {
@@ -50,43 +47,8 @@ public class MybatisElasticSearchResultSet  implements ResultSet {
     }
 
     @Override
-    public String getString(int columnIndex) throws SQLException {
-        return (String) current.get(columnIndex);
-    }
-
-    @Override
-    public boolean getBoolean(int columnIndex) throws SQLException {
-        return (Boolean) current.get(columnIndex);
-    }
-
-    @Override
     public byte getByte(int columnIndex) throws SQLException {
         return 0;
-    }
-
-    @Override
-    public short getShort(int columnIndex) throws SQLException {
-        return ((Short) current.get(columnIndex));
-    }
-
-    @Override
-    public int getInt(int columnIndex) throws SQLException {
-        return ((Integer) current.get(columnIndex));
-    }
-
-    @Override
-    public long getLong(int columnIndex) throws SQLException {
-        return (Long) current.get(columnIndex);
-    }
-
-    @Override
-    public float getFloat(int columnIndex) throws SQLException {
-        return ((Float) current.get(columnIndex)).floatValue();
-    }
-
-    @Override
-    public double getDouble(int columnIndex) throws SQLException {
-        return (Double) current.get(columnIndex);
     }
 
     @Override
@@ -97,21 +59,6 @@ public class MybatisElasticSearchResultSet  implements ResultSet {
     @Override
     public byte[] getBytes(int columnIndex) throws SQLException {
         return new byte[0];
-    }
-
-    @Override
-    public Date getDate(int columnIndex) throws SQLException {
-        return (Date) current.get(columnIndex);
-    }
-
-    @Override
-    public Time getTime(int columnIndex) throws SQLException {
-        return (Time) current.get(columnIndex);
-    }
-
-    @Override
-    public Timestamp getTimestamp(int columnIndex) throws SQLException {
-        return (Timestamp) current.get(columnIndex);
     }
 
     @Override
@@ -131,12 +78,20 @@ public class MybatisElasticSearchResultSet  implements ResultSet {
 
     @Override
     public String getString(String columnLabel) throws SQLException {
-        return (String) current.get(headers.indexOf(columnLabel));
+        return getString(findColumn(columnLabel));
+    }
+    @Override
+    public String getString(int columnIndex) throws SQLException {
+        return (String) current.get(columnIndex-1);
     }
 
     @Override
     public boolean getBoolean(String columnLabel) throws SQLException {
-        return (Boolean) current.get(headers.indexOf(columnLabel));
+        return getBoolean(findColumn(columnLabel));
+    }
+    @Override
+    public boolean getBoolean(int columnIndex) throws SQLException {
+        return (Boolean) current.get(columnIndex-1);
     }
 
     @Override
@@ -146,32 +101,73 @@ public class MybatisElasticSearchResultSet  implements ResultSet {
 
     @Override
     public short getShort(String columnLabel) throws SQLException {
-        return ((Short) current.get(headers.indexOf(columnLabel)));
+        return getShort(findColumn(columnLabel));
+    }
+
+    @Override
+    public short getShort(int columnIndex) throws SQLException {
+        return ((Short) current.get(columnIndex-1));
     }
 
     @Override
     public int getInt(String columnLabel) throws SQLException {
-        return (Integer) current.get(headers.indexOf(columnLabel));
+        return getInt(findColumn(columnLabel));
+    }
+    @Override
+    public int getInt(int columnIndex) throws SQLException {
+        return ((Integer) current.get(columnIndex-1));
     }
 
     @Override
     public long getLong(String columnLabel) throws SQLException {
-        return (Long) current.get(headers.indexOf(columnLabel));
+        return getLong(findColumn(columnLabel));
+    }
+    @Override
+    public long getLong(int columnIndex) throws SQLException {
+        return (Long) current.get(columnIndex-1);
     }
 
     @Override
     public float getFloat(String columnLabel) throws SQLException {
-        return (Float) current.get(headers.indexOf(columnLabel));
+        return getFloat(findColumn(columnLabel));
+    }
+    @Override
+    public float getFloat(int columnIndex) throws SQLException {
+        return (Float) current.get(columnIndex-1);
     }
 
     @Override
     public double getDouble(String columnLabel) throws SQLException {
-        return (Double) current.get(headers.indexOf(columnLabel));
+        return getDouble(findColumn(columnLabel));
     }
+    @Override
+    public double getDouble(int columnIndex) throws SQLException {
+        return (Double) current.get(columnIndex-1);
+    }
+
 
     @Override
     public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
         return null;
+    }
+    @Override
+    public ResultSetMetaData getMetaData() throws SQLException {
+        return metaData;
+    }
+
+    @Override
+    public Object getObject(String columnLabel) throws SQLException {
+        return getObject(findColumn(columnLabel));
+    }
+    @Override
+    public Object getObject(int columnIndex) throws SQLException {
+        return current.get(columnIndex-1);
+
+    }
+
+    @Override
+    public int findColumn(String columnLabel) throws SQLException {
+        return headers.indexOf(columnLabel)+1;
     }
 
     @Override
@@ -181,17 +177,51 @@ public class MybatisElasticSearchResultSet  implements ResultSet {
 
     @Override
     public Date getDate(String columnLabel) throws SQLException {
-        return (Date) current.get(headers.indexOf(columnLabel));
+        return getDate(findColumn(columnLabel));
+    }
+    @Override
+    public Date getDate(int columnIndex) throws SQLException {
+        return (Date) current.get(columnIndex-1);
+    }
+    @Override
+    public Date getDate(int columnIndex, Calendar cal) throws SQLException {
+        return null;
+    }
+
+    @Override
+    public Date getDate(String columnLabel, Calendar cal) throws SQLException {
+        return null;
     }
 
     @Override
     public Time getTime(String columnLabel) throws SQLException {
-        return (Time) current.get(headers.indexOf(columnLabel));
+        return getTime(findColumn(columnLabel));
+    }
+    @Override
+    public Time getTime(int columnIndex) throws SQLException {
+        return (Time) current.get(columnIndex-1);
     }
 
     @Override
     public Timestamp getTimestamp(String columnLabel) throws SQLException {
-        return (Timestamp) current.get(headers.indexOf(columnLabel));
+        return getTimestamp(findColumn(columnLabel));
+    }
+    @Override
+    public Timestamp getTimestamp(int columnIndex) throws SQLException {
+        return (Timestamp) current.get(columnIndex-1);
+    }
+
+    @Override
+    public Clob getClob(String columnLabel) throws SQLException {
+        return getClob(findColumn(columnLabel));
+    }
+    @Override
+    public Clob getClob(int columnIndex) throws SQLException {
+        Object value = current.get(columnIndex-1);
+        if(value == null){
+            return null;
+        }
+        return new SerialClob(value.toString().toCharArray());
     }
 
     @Override
@@ -222,27 +252,6 @@ public class MybatisElasticSearchResultSet  implements ResultSet {
     @Override
     public String getCursorName() throws SQLException {
         return null;
-    }
-
-    @Override
-    public ResultSetMetaData getMetaData() throws SQLException {
-        return metaData;
-    }
-
-    @Override
-    public Object getObject(int columnIndex) throws SQLException {
-        return current.get(columnIndex);
-
-    }
-
-    @Override
-    public Object getObject(String columnLabel) throws SQLException {
-        return current.get(headers.indexOf(columnLabel));
-    }
-
-    @Override
-    public int findColumn(String columnLabel) throws SQLException {
-        return ((ResultSetMetaDataBase) metaData).findColumn(columnLabel);
     }
 
     @Override
@@ -615,14 +624,7 @@ public class MybatisElasticSearchResultSet  implements ResultSet {
         return null;
     }
 
-    @Override
-    public Clob getClob(int columnIndex) throws SQLException {
-        Object value = current.get(columnIndex);
-        if(value == null){
-            return null;
-        }
-        return new MockClob(value.toString().getBytes());
-    }
+
 
     @Override
     public Array getArray(int columnIndex) throws SQLException {
@@ -645,26 +647,7 @@ public class MybatisElasticSearchResultSet  implements ResultSet {
     }
 
     @Override
-    public Clob getClob(String columnLabel) throws SQLException {
-        Object value = current.get(headers.indexOf(columnLabel));
-        if(value == null){
-            return null;
-        }
-        return new MockClob(value.toString().getBytes());
-    }
-
-    @Override
     public Array getArray(String columnLabel) throws SQLException {
-        return null;
-    }
-
-    @Override
-    public Date getDate(int columnIndex, Calendar cal) throws SQLException {
-        return null;
-    }
-
-    @Override
-    public Date getDate(String columnLabel, Calendar cal) throws SQLException {
         return null;
     }
 

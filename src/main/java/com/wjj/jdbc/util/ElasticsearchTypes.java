@@ -1,4 +1,4 @@
-package com.wjj.es.util;
+package com.wjj.jdbc.util;
 
 /**
  * Created by wjj on 2017/6/5.
