@@ -1,6 +1,6 @@
-package com.alibaba.druid.jest;
+package com.wjj.jdbc.jest;
 
-import com.wjj.es.util.PropertiesUtil;
+import com.wjj.jdbc.util.PropertiesUtil;
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;
 import io.searchbox.client.JestResult;
@@ -23,13 +23,13 @@ public class JestUtil {
     private static class ClientHolder{
         public static JestClient jestClient = createJestClient();
         private static JestClient createJestClient(){
-            String jdbcUrl = PropertiesUtil.getValue("datasource.es.http.host");//从配置文件中获取配置信息
+            String jdbcUrl = PropertiesUtil.getValue("http.url");//从配置文件中获取配置信息
             if(StringUtils.isBlank(jdbcUrl)){
-                throw new RuntimeException("缺少datasource.es.host配置项，创建JestClient失败");
+                throw new RuntimeException("缺少http.url配置项，创建JestClient失败");
             }
             JestClientFactory factory = new JestClientFactory();
             String[] hostAndPortArray = jdbcUrl.split(",");
-            String maxActive = PropertiesUtil.getValue("datasource.es.maxActive","20");
+            String maxActive = PropertiesUtil.getValue("maxActive","20");
             factory.setHttpClientConfig(new HttpClientConfig
                     .Builder(Arrays.asList(hostAndPortArray))
                     .multiThreaded(true)

@@ -1,8 +1,6 @@
-package com.alibaba.druid.jest;
+package com.wjj.jdbc.jest;
 
-import com.alibaba.druid.util.jdbc.ResultSetMetaDataBase;
 import io.searchbox.client.JestResult;
-import io.searchbox.core.SearchResult;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -237,7 +235,7 @@ public class JestResultSet implements ResultSet {
 
     @Override
     public int findColumn(String columnLabel) throws SQLException {
-        return ((ResultSetMetaDataBase) metaData).findColumn(columnLabel);
+        return 0;
     }
 
     @Override
