@@ -2,7 +2,8 @@
 
 2.0.x版本最先是在[elasticsearch-sql](https://github.com/NLPchina/elasticsearch-sql)的[实验特性项目](https://github.com/NLPchina/elasticsearch-sql/pull/283)的基础上修改而来,修改和补充了部分jdbc规范，使之能够和mybatis结合，sql支持度可参考elasticsearch-sql，引入了[jest](https://github.com/searchbox-io/Jest)，实现了mybatis+rest api的方式操作elasticsearch。提供了Java api的工具类`ESUtil`和rest api工具类`JestUtil`。
 
-由于和Druid数据库连接池耦合太大，在使用过程中发现了一系列问题，决定将JDBC和数据库连接池解耦。添加ElasticSearchDriver类。
+由于和Druid数据库连接池耦合太大，在使用过程中发现了一系列问题，决定将JDBC和数据库连接池解耦。添加ElasticSearchDriver类可以直接使用Class.forName加载驱动。
+3.0.0版本不再使用elasticsearch-sql实验项目关于数据库连接池的部分，依旧沿用sql解析部分的代码
 ### 使用方式
 
 ####  maven依赖
