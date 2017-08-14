@@ -201,8 +201,8 @@ public class Test {
         DruidDataSource dataSource = null;
         try{
             Map properties = new HashMap<>();
-            properties.put("url","jdbc:elasticsearch://10.43.164.113:9300");
-            properties.put("http.url","http://10.43.164.113:9200");
+            properties.put("url","jdbc:elasticsearch://192.168.70.128:9300");
+            properties.put("http.url","http://192.168.70.128:9200");
             properties.put("maxActive","20");
             dataSource = (DruidDataSource) MybatisElasticSearchDruidDataSourceFactory.createDataSource(properties);
         }catch (Exception e){
