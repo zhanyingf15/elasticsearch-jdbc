@@ -3,10 +3,12 @@ package com.alibaba.druid.pool;
 import com.alibaba.druid.jest.JestResultSet;
 import com.alibaba.druid.jest.JestType;
 import com.alibaba.druid.jest.JestUtil;
+import com.alibaba.druid.proxy.jdbc.ConnectionProxyImpl;
 import com.alibaba.druid.support.logging.Log;
 import com.alibaba.druid.support.logging.LogFactory;
 import io.searchbox.client.JestResult;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.plugin.nlpcn.QueryActionElasticExecutor;
 import org.elasticsearch.plugin.nlpcn.executors.CsvExtractorException;
 import org.nlpcn.es4sql.SearchDao;
@@ -14,25 +16,34 @@ import org.nlpcn.es4sql.exception.SqlParseException;
 import org.nlpcn.es4sql.jdbc.ObjectResult;
 import org.nlpcn.es4sql.jdbc.ObjectResultsExtractor;
 import org.nlpcn.es4sql.query.QueryAction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by wjj on 2017/5/25.
  */
-public class MybatisElasticSearchDruidPooledPreparedStatement extends ElasticSearchDruidPooledPreparedStatement {
-    public static Logger logger = LoggerFactory.getLogger(MybatisElasticSearchDruidPooledPreparedStatement.class);
+public class MybatisElasticSearchDruidPooledPreparedStatement extends DruidPooledPreparedStatement {
+    private final static Log LOG = LogFactory.getLog(MybatisElasticSearchDruidPooledPreparedStatement.class);
     LinkedList<String> sqlList = new LinkedList<String>();//存放分解的sql片段
+    Client client = null;
     public MybatisElasticSearchDruidPooledPreparedStatement(DruidPooledConnection conn, PreparedStatementHolder holder)throws SQLException {
         super(conn,holder);
+        this.client = ((ElasticSearchConnection)getOriginalConnection(conn.getConnection())).getClient();
         sqlList.clear();
         buildSqlList(getSql());
 
+    }
+    private Connection getOriginalConnection(Connection conn){
+        if(conn instanceof ConnectionProxyImpl){
+            return ((ConnectionProxyImpl)conn).getConnectionRaw();
+        }else{//conn instanceof ElasticSearchConnection
+            return conn;
+        }
     }
     //分解sql，如select * from tableName where a=? and b=?分解成 ["select * from tableName where a=","?"," and b=","?"]
     private void buildSqlList(String sql){
@@ -124,7 +135,7 @@ public class MybatisElasticSearchDruidPooledPreparedStatement extends ElasticSea
                 JestResult result = getJestResult(getSql());
                 return result.getResponseCode();
             }catch (Exception e){
-                logger.error("执行jest操作发生错误",e);
+                LOG.error("执行jest操作发生错误",e);
             }
         }
         return -1;
@@ -199,7 +210,7 @@ public class MybatisElasticSearchDruidPooledPreparedStatement extends ElasticSea
         return false;
     }
     private ObjectResult getObjectResult(boolean flat, String query, boolean includeScore, boolean includeType, boolean includeId) throws SqlParseException, SQLFeatureNotSupportedException, Exception, CsvExtractorException {
-        SearchDao searchDao = new org.nlpcn.es4sql.SearchDao(client);
+        SearchDao searchDao = new SearchDao(client);
 
         //String rewriteSQL = searchDao.explain(getSql()).explain().explain();
 

@@ -1,9 +1,11 @@
 package com.alibaba.druid.pool;
 
+import com.alibaba.druid.proxy.jdbc.ConnectionProxy;
+import com.alibaba.druid.proxy.jdbc.ConnectionProxyImpl;
+
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Created by wjj on 2017/5/25.
@@ -27,7 +29,7 @@ public class MybatisElasticSearchDruidPooledConnection extends ElasticSearchDrui
 
         if (stmtHolder == null) {
             try {
-                stmtHolder = new PreparedStatementHolder(key, conn.prepareStatement(sql));
+                stmtHolder = new PreparedStatementHolder(key, getOriginalConnection(conn).prepareStatement(sql));
                 holder.getDataSource().incrementPreparedStatementCount();
             } catch (SQLException ex) {
                 handleException(ex);
@@ -61,7 +63,7 @@ public class MybatisElasticSearchDruidPooledConnection extends ElasticSearchDrui
 
         if (stmtHolder == null) {
             try {
-                stmtHolder = new PreparedStatementHolder(key, conn.prepareStatement(sql, resultSetType,
+                stmtHolder = new PreparedStatementHolder(key, getOriginalConnection(conn).prepareStatement(sql, resultSetType,
                         resultSetConcurrency));
                 holder.getDataSource().incrementPreparedStatementCount();
             } catch (SQLException ex) {
@@ -82,9 +84,16 @@ public class MybatisElasticSearchDruidPooledConnection extends ElasticSearchDrui
         stmtHolder.incrementInUseCount();
         holder.getDataSource().initStatement(this, stmtHolder.getStatement());
     }
+    private Connection getOriginalConnection(Connection conn){
+        if(conn instanceof ConnectionProxyImpl){
+            return ((ConnectionProxyImpl)conn).getConnectionRaw();
+        }else{//conn instanceof ElasticSearchConnection
+            return conn;
+        }
+    }
     /*@Override
     public void close() throws SQLException {
-        *//*if (isDisable()) {
+        if (isDisable()) {
             return;
         }
         if(this.holder==null){
@@ -97,11 +106,7 @@ public class MybatisElasticSearchDruidPooledConnection extends ElasticSearchDrui
             psh.getStatement().close();
         }
         this.holder.setDiscard(true);
-        this.getConnection().close();*//*
-        super.close();
-//        DruidAbstractDataSource dataSource = holder.getDataSource();
-        System.err.println("close:"+Thread.currentThread().getName());
-//        System.err.println("active:"+dataSource.getActiveConnections().size());
+        this.getConnection().close();
     }*/
 
 }

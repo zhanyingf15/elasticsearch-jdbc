@@ -4,9 +4,6 @@ import com.alibaba.druid.jest.JestResultSet;
 import com.alibaba.druid.support.logging.Log;
 import com.alibaba.druid.support.logging.LogFactory;
 import io.searchbox.client.JestResult;
-import org.elasticsearch.client.Client;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -19,19 +16,14 @@ import java.util.Calendar;
  * Created by wjj on 2017/5/26.
  */
 public class MybatisElasticSearchConnection extends ElasticSearchConnection {
-    public static Logger logger = LoggerFactory.getLogger(MybatisElasticSearchConnection.class);
+    private final static Log LOG = LogFactory.getLog(MybatisElasticSearchConnection.class);
     public MybatisElasticSearchConnection(String jdbcUrl){
         super(jdbcUrl);
     }
     @Override
     public void close() throws SQLException {
         this.getClient().close();
-        logger.info("关闭连接");
-        System.err.println("connection close:"+Thread.currentThread().getName());
-    }
-    @Override
-    public DatabaseMetaData getMetaData() throws SQLException {
-        return null;
+        LOG.info("关闭连接");
     }
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {

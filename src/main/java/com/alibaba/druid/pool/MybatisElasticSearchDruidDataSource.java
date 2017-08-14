@@ -5,6 +5,7 @@ import com.alibaba.druid.TransactionTimeoutException;
 import com.alibaba.druid.VERSION;
 import com.alibaba.druid.filter.AutoLoad;
 import com.alibaba.druid.filter.Filter;
+import com.alibaba.druid.filter.FilterChainImpl;
 import com.alibaba.druid.pool.vendor.MySqlExceptionSorter;
 import com.alibaba.druid.pool.vendor.MySqlValidConnectionChecker;
 import com.alibaba.druid.proxy.DruidDriver;
@@ -20,12 +21,11 @@ import com.alibaba.druid.stat.DruidDataSourceStatManager;
 import com.alibaba.druid.stat.JdbcDataSourceStat;
 import com.alibaba.druid.stat.JdbcSqlStat;
 import com.alibaba.druid.stat.JdbcSqlStatValue;
+import com.alibaba.druid.support.logging.Log;
+import com.alibaba.druid.support.logging.LogFactory;
 import com.alibaba.druid.util.*;
 import com.alibaba.druid.wall.WallFilter;
 import com.alibaba.druid.wall.WallProviderStatValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.management.JMException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -54,7 +54,8 @@ import static com.alibaba.druid.util.Utils.getBoolean;
  */
 public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataSource {
 
-    public static Logger logger = LoggerFactory.getLogger(DruidDataSource.class);
+    private final static Log LOG = LogFactory.getLog(DruidDataSource.class);
+
     private static final long serialVersionUID = 1L;
 
     // stats
@@ -160,7 +161,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 try {
                     this.setFilters(property);
                 } catch (SQLException e) {
-                    logger.error("setFilters error", e);
+                    LOG.error("setFilters error", e);
                 }
             }
         }
@@ -171,7 +172,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                     long value = Long.parseLong(property);
                     this.setTimeBetweenLogStatsMillis(value);
                 } catch (NumberFormatException e) {
-                    logger.error("illegal property '" + Constants.DRUID_TIME_BETWEEN_LOG_STATS_MILLIS + "'", e);
+                    LOG.error("illegal property '" + Constants.DRUID_TIME_BETWEEN_LOG_STATS_MILLIS + "'", e);
                 }
             }
         }
@@ -184,7 +185,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                         dataSourceStat.setMaxSqlSize(value);
                     }
                 } catch (NumberFormatException e) {
-                    logger.error("illegal property '" + Constants.DRUID_STAT_SQL_MAX_SIZE + "'", e);
+                    LOG.error("illegal property '" + Constants.DRUID_STAT_SQL_MAX_SIZE + "'", e);
                 }
             }
         }
@@ -207,7 +208,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                     int value = Integer.parseInt(property);
                     this.setNotFullTimeoutRetryCount(value);
                 } catch (NumberFormatException e) {
-                    logger.error("illegal property 'druid.notFullTimeoutRetryCount'", e);
+                    LOG.error("illegal property 'druid.notFullTimeoutRetryCount'", e);
                 }
             }
         }
@@ -246,8 +247,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
             if (activeCount > 0) {
                 throw new SQLException("can not restart, activeCount not zero. " + activeCount);
             }
-            if (logger.isInfoEnabled()) {
-                logger.info("{dataSource-" + this.getID() + "} restart");
+            if (LOG.isInfoEnabled()) {
+                LOG.info("{dataSource-" + this.getID() + "} restart");
             }
 
             this.close();
@@ -337,8 +338,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
             return;
         }
 
-        if (logger.isInfoEnabled()) {
-            logger.info("set poolPreparedStatements " + this.poolPreparedStatements + " -> " + value);
+        if (LOG.isInfoEnabled()) {
+            LOG.info("set poolPreparedStatements " + this.poolPreparedStatements + " -> " + value);
         }
 
         if (!value) {
@@ -378,8 +379,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
             throw new IllegalArgumentException("maxActive less than minIdle, " + maxActive + " < " + this.minIdle);
         }
 
-        if (logger.isInfoEnabled()) {
-            logger.info("maxActive changed : " + this.maxActive + " -> " + maxActive);
+        if (LOG.isInfoEnabled()) {
+            LOG.info("maxActive changed : " + this.maxActive + " -> " + maxActive);
         }
 
         lock.lock();
@@ -430,8 +431,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
         }
 
         if (!equals) {
-            if (inited && logger.isInfoEnabled()) {
-                logger.info("connectProperties changed : " + this.connectProperties + " -> " + properties);
+            if (inited && LOG.isInfoEnabled()) {
+                LOG.info("connectProperties changed : " + this.connectProperties + " -> " + properties);
             }
 
             configFromPropety(properties);
@@ -575,7 +576,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                     poolingPeakTime = System.currentTimeMillis();
                 }
             } catch (SQLException ex) {
-                logger.error("init datasource error, url: " + this.getUrl(), ex);
+                LOG.error("init datasource error, url: " + this.getUrl(), ex);
                 connectError = ex;
             }
 
@@ -592,7 +593,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 throw connectError;
             }
         } catch (SQLException e) {
-            logger.error("dataSource init error", e);
+            LOG.error("dataSource init error", e);
             throw e;
         } catch (InterruptedException e) {
             throw new SQLException(e.getMessage(), e);
@@ -600,8 +601,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
             inited = true;
             lock.unlock();
 
-            if (init && logger.isInfoEnabled()) {
-                logger.info("{dataSource-" + this.getID() + "} inited");
+            if (init && LOG.isInfoEnabled()) {
+                LOG.info("{dataSource-" + this.getID() + "} inited");
             }
         }
     }
@@ -653,9 +654,9 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
     @Override
     public Connection createPhysicalConnection(String url, Properties info) throws SQLException {
         Connection conn = new MybatisElasticSearchConnection(url);
-//        if (getProxyFilters().size() > 0) {
-//            conn = new FilterChainImpl(this).wrap(conn,info);
-//        }
+        if (getProxyFilters().size() > 0) {
+            conn = new FilterChainImpl(this).wrap(conn,info);
+        }
         createCount.incrementAndGet();
         return conn;
     }
@@ -719,8 +720,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
         for (Filter autoFilter : druidAutoFilterLoader) {
             AutoLoad autoLoad = autoFilter.getClass().getAnnotation(AutoLoad.class);
             if (autoLoad != null && autoLoad.value()) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("load filter from spi :" + autoFilter.getClass().getName());
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("load filter from spi :" + autoFilter.getClass().getName());
                 }
                 addFilter(autoFilter);
             }
@@ -735,7 +736,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
         DataSourceProxyConfig config = DruidDriver.parseConfig(jdbcUrl, null);
         this.driverClass = config.getRawDriverClassName();
 
-        logger.error("error url : '" + jdbcUrl + "', it should be : '" + config.getRawUrl() + "'");
+        LOG.error("error url : '" + jdbcUrl + "', it should be : '" + config.getRawUrl() + "'");
 
         this.jdbcUrl = config.getRawUrl();
         if (this.name == null) {
@@ -795,7 +796,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
             errorMessage += "testWhileIdle is true, ";
         }
 
-        logger.error(errorMessage + "validationQuery not set");
+        LOG.error(errorMessage + "validationQuery not set");
     }
 
     protected void initCheck() throws SQLException {
@@ -840,7 +841,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
         SQLSelectQuery query = ((SQLSelectStatement) stmt).getSelect().getQuery();
         if (query instanceof SQLSelectQueryBlock) {
             if (((SQLSelectQueryBlock) query).getFrom() == null) {
-                logger.error("invalid oracle validationQuery. " + validationQuery + ", may should be : " + validationQuery
+                LOG.error("invalid oracle validationQuery. " + validationQuery + ", may should be : " + validationQuery
                         + " FROM DUAL");
             }
         }
@@ -869,7 +870,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
         SQLSelectQuery query = ((SQLSelectStatement) stmt).getSelect().getQuery();
         if (query instanceof SQLSelectQueryBlock) {
             if (((SQLSelectQueryBlock) query).getFrom() == null) {
-                logger.error("invalid db2 validationQuery. " + validationQuery + ", may should be : " + validationQuery
+                LOG.error("invalid db2 validationQuery. " + validationQuery + ", may should be : " + validationQuery
                         + " FROM SYSDUMMY");
             }
         }
@@ -917,8 +918,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
             } catch (GetConnectionTimeoutException ex) {
                 if (notFullTimeoutRetryCnt <= this.notFullTimeoutRetryCount && !isFull()) {
                     notFullTimeoutRetryCnt++;
-                    if (logger.isWarnEnabled()) {
-                        logger.warn("not full timeout retry : " + notFullTimeoutRetryCnt);
+                    if (LOG.isWarnEnabled()) {
+                        LOG.warn("not full timeout retry : " + notFullTimeoutRetryCnt);
                     }
                     continue;
                 }
@@ -1100,7 +1101,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                     holder.setDiscard(true);
                 }
 
-                logger.error("discard connection", sqlEx);
+                LOG.error("discard connection", sqlEx);
             }
 
             throw sqlEx;
@@ -1116,7 +1117,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
         final DruidConnectionHolder holder = pooledConnection.getConnectionHolder();
 
         if (holder == null) {
-            logger.warn("connectionHolder is null");
+            LOG.warn("connectionHolder is null");
             return;
         }
 
@@ -1124,7 +1125,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 && (!isAsyncCloseConnectionEnable()) //
                 && pooledConnection.getOwnerThread() != Thread.currentThread()//
                 ) {
-            logger.warn("get/close not same thread");
+            LOG.warn("get/close not same thread");
         }
 
         final Connection physicalConnection = holder.getConnection();
@@ -1134,8 +1135,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 if (pooledConnection.isTraceEnable()) {
                     Object oldInfo = activeConnections.remove(pooledConnection);
                     if (oldInfo == null) {
-                        if (logger.isWarnEnabled()) {
-                            logger.warn("remove abandonded failed. activeConnections.size " + activeConnections.size());
+                        if (LOG.isWarnEnabled()) {
+                            LOG.warn("remove abandonded failed. activeConnections.size " + activeConnections.size());
                         }
                     }
                     pooledConnection.setTraceEnable(false);
@@ -1209,7 +1210,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 holder.setDiscard(true);
             }
 
-            logger.error("recyle error", e);
+            LOG.error("recyle error", e);
             recycleErrorCount.incrementAndGet();
         }
     }
@@ -1274,7 +1275,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                     connections[i] = null;
                     destroyCount.incrementAndGet();
                 } catch (Exception ex) {
-                    logger.warn("close connection error", ex);
+                    LOG.warn("close connection error", ex);
                 }
             }
             poolingCount = 0;
@@ -1294,8 +1295,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
             lock.unlock();
         }
 
-        if (logger.isInfoEnabled()) {
-            logger.info("{dataSource-" + this.getID() + "} closed");
+        if (LOG.isInfoEnabled()) {
+            LOG.info("{dataSource-" + this.getID() + "} closed");
         }
     }
 
@@ -1552,7 +1553,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
             } finally {
                 lock.unlock();
             }
-            logger.error("create connection holder error", ex);
+            LOG.error("create connection holder error", ex);
             return;
         }
 
@@ -1593,7 +1594,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 try {
                     lock.lockInterruptibly();
                 } catch (InterruptedException e2) {
-                    logger.error("interrupt: ", e2);
+                    LOG.error("interrupt: ", e2);
                     lock.lock();
                     try {
                         createTaskCount--;
@@ -1624,7 +1625,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 try {
                     connection = createPhysicalConnection();
                 } catch (SQLException e) {
-                    logger.error("create connection error, url: " + jdbcUrl, e);
+                    LOG.error("create connection error, url: " + jdbcUrl, e);
 
                     errorCount++;
 
@@ -1644,7 +1645,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                         return;
                     }
                 } catch (RuntimeException e) {
-                    logger.error("create connection error", e);
+                    LOG.error("create connection error", e);
                     continue;
                 } catch (Error e) {
                     lock.lock();
@@ -1653,7 +1654,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                     } finally {
                         lock.unlock();
                     }
-                    logger.error("create connection error", e);
+                    LOG.error("create connection error", e);
                     break;
                 }
 
@@ -1711,7 +1712,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 try {
                     connection = createPhysicalConnection();
                 } catch (SQLException e) {
-                    logger.error("create connection error, url: " + jdbcUrl, e);
+                    LOG.error("create connection error, url: " + jdbcUrl, e);
 
                     errorCount++;
 
@@ -1727,10 +1728,10 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                         }
                     }
                 } catch (RuntimeException e) {
-                    logger.error("create connection error", e);
+                    LOG.error("create connection error", e);
                     continue;
                 } catch (Error e) {
-                    logger.error("create connection error", e);
+                    LOG.error("create connection error", e);
                     break;
                 }
 
@@ -1807,7 +1808,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                     try {
                         logStats();
                     } catch (Exception e) {
-                        logger.error("logStats error", e);
+                        LOG.error("logStats error", e);
                     }
 
                     Thread.sleep(timeBetweenLogStatsMillis);
@@ -2130,7 +2131,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 buf.append(sql);
                 buf.append(";");
             }
-            logger.error(buf.toString(), new TransactionTimeoutException());
+            LOG.error(buf.toString(), new TransactionTimeoutException());
         }
     }
 
@@ -2451,7 +2452,7 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
                 Connection conn = createPhysicalConnection();
                 holder = new DruidConnectionHolder(this, conn);
             } catch (SQLException e) {
-                logger.error("fill connection error, url: " + this.jdbcUrl, e);
+                LOG.error("fill connection error, url: " + this.jdbcUrl, e);
                 connectErrorCount.incrementAndGet();
                 throw e;
             }
@@ -2475,8 +2476,8 @@ public class MybatisElasticSearchDruidDataSource extends ElasticSearchDruidDataS
             }
         }
 
-        if (logger.isInfoEnabled()) {
-            logger.info("fill " + fillCount + " connections");
+        if (LOG.isInfoEnabled()) {
+            LOG.info("fill " + fillCount + " connections");
         }
 
         return fillCount;
