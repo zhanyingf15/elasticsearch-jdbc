@@ -29,7 +29,7 @@
 ####  application.xml
 
 ```xml
-<bean id="defaulteDataSource-es" class="com.alibaba.druid.pool.MybatisElasticSearchDruidDataSource" init-method="init" destroy-method="close">
+<bean id="defaulteDataSource-es" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
 		<property name="driverClassName" value="com.wjj.jdbc.elasticsearch.ElasticSearchDriver" />
 		<property name="url" value="${java.url}" />
 		<property name="initialSize" value="2" />
