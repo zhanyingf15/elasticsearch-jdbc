@@ -87,7 +87,7 @@ maxActive=20
 
 ```xml
 <!-- query data from oracle database -->
-<select id="qryOracleList" parameterType="java.lang.Object" resultType="com.tydic.base.util.MapEntry">
+<select id="qryOracleList" parameterType="java.lang.Object" resultType="java.util.HashMap">
   SELECT * FROM testTable 
 </select>
 <!--query or update data by rest api -->
