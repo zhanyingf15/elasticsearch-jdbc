@@ -38,7 +38,7 @@ public class ESUtil {
     private static Client client;
     private static Client createClient(String jdbcUrl){
         if(StringUtils.isBlank(jdbcUrl)){
-            jdbcUrl = PropertiesUtil.getValue("url");
+            jdbcUrl = PropertiesUtil.getValue("java.url");
         }
         TransportClient transportClient = null;
         Settings settings = Settings.builder().put("client.transport.ignore_cluster_name", true).build();
