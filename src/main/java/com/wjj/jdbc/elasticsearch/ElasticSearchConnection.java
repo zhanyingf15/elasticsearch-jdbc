@@ -1,5 +1,6 @@
 package com.wjj.jdbc.elasticsearch;
 
+import com.wjj.jdbc.util.ESUtil;
 import com.wjj.jdbc.util.LOG;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
@@ -21,22 +22,7 @@ public class ElasticSearchConnection implements Connection{
     public static Logger logger = LOG.getLogger(ElasticSearchConnection.class);
     private Client client;
     public ElasticSearchConnection(String jdbcUrl){
-        Settings settings = Settings.builder().put("client.transport.ignore_cluster_name", true).build();
-        try {
-            TransportClient transportClient = TransportClient.builder().settings(settings).build();
-
-            String hostAndPortArrayStr = jdbcUrl.split("/")[2];
-            String[] hostAndPortArray = hostAndPortArrayStr.split(",");
-
-            for (String hostAndPort : hostAndPortArray) {
-                String host = hostAndPort.split(":")[0];
-                String port = hostAndPort.split(":")[1];
-                transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), Integer.parseInt(port)));
-            }
-            client = transportClient;
-        } catch (UnknownHostException e) {
-            logger.error("",e);
-        }
+        client = ESUtil.getNewClient(jdbcUrl);
     }
     public Client getClient(){
         return this.client;

@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -35,31 +36,39 @@ import java.util.*;
 public class ESUtil {
     public static Logger logger = LoggerFactory.getLogger(ESUtil.class);
     private static Client client;
-    private static Client createClient(){
+    private static Client createClient(String jdbcUrl){
+        if(StringUtils.isBlank(jdbcUrl)){
+            jdbcUrl = PropertiesUtil.getValue("url");
+        }
         TransportClient transportClient = null;
-        Settings settings = Settings.builder()
-                .put("client.transport.ignore_cluster_name", true)
-                .put("client.transport.sniff", true).build();
+        Settings settings = Settings.builder().put("client.transport.ignore_cluster_name", true).build();
         try {
             transportClient = TransportClient.builder().settings(settings).build();
-            String jdbcUrl = PropertiesUtil.getValue("datasource.es.host");
-            String[] hostAndPortArray = jdbcUrl.split(",");
+
+            String hostAndPortArrayStr = jdbcUrl.split("/")[2];
+            String[] hostAndPortArray = hostAndPortArrayStr.split(",");
 
             for (String hostAndPort : hostAndPortArray) {
                 String host = hostAndPort.split(":")[0];
                 String port = hostAndPort.split(":")[1];
                 transportClient.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), Integer.parseInt(port)));
             }
-        }catch (Exception e){
-            logger.error("创建elasticsearch client错误",e);
+        } catch (UnknownHostException e) {
+            logger.error("",e);
         }
         return transportClient;
     }
     public static Client getClient(){
+        return getClient(null);
+    }
+    public static Client getClient(String jdbcUrl){
         if(client==null){
-            client = createClient();
+            client = createClient(jdbcUrl);
         }
         return client;
+    }
+    public static Client getNewClient(String jdbcUrl){
+        return createClient(jdbcUrl);
     }
 
     /**
