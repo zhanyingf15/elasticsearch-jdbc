@@ -1,5 +1,6 @@
 package com.wjj.jdbc.util;
 
+import com.wjj.jdbc.schedule.ESClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -35,8 +36,8 @@ import java.util.*;
  */
 public class ESUtil {
     public static Logger logger = LoggerFactory.getLogger(ESUtil.class);
-    private static Client client;
-    private static Client createClient(String jdbcUrl){
+    private static ESClient client;
+    private static ESClient createClient(String jdbcUrl){
         if(StringUtils.isBlank(jdbcUrl)){
             jdbcUrl = PropertiesUtil.getValue("java.url");
         }
@@ -56,19 +57,20 @@ public class ESUtil {
         } catch (UnknownHostException e) {
             logger.error("",e);
         }
-        return transportClient;
+        return new ESClient(transportClient);
     }
-    public static Client getClient(){
+    public static ESClient getClient(){
         return getClient(null);
     }
-    public static Client getClient(String jdbcUrl){
+    public static ESClient getClient(String jdbcUrl){
         if(client==null){
             client = createClient(jdbcUrl);
         }
         return client;
     }
-    public static Client getNewClient(String jdbcUrl){
-        return createClient(jdbcUrl);
+    public static ESClient getNewClient(String jdbcUrl){
+        ESClient esClient = createClient(jdbcUrl);
+        return esClient;
     }
 
     /**
@@ -79,7 +81,7 @@ public class ESUtil {
      * @return
      */
     public static IndexResponse insert(String index,String type,Map params){
-        return getClient().prepareIndex(index,type).setRefresh(true).setSource(params).get();
+        return getClient().getClient().prepareIndex(index,type).setRefresh(true).setSource(params).get();
     }
     /**
      * 插入数据,使用指定id作为文档id
@@ -90,7 +92,7 @@ public class ESUtil {
      * @return
      */
     public static IndexResponse insert(String index,String type,String id,Map params){
-        return getClient().prepareIndex(index,type).setId(id).setRefresh(true).setSource(params).get();
+        return getClient().getClient().prepareIndex(index,type).setId(id).setRefresh(true).setSource(params).get();
     }
     /**
      * 批量插入数据
@@ -100,7 +102,7 @@ public class ESUtil {
      * @return BulkResponse
      */
     public static BulkResponse insert(String index,String type,Map ...params){
-        Client client = getClient();
+        Client client = getClient().getClient();
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
         for(Map param:params){
             IndexRequestBuilder indexBuilder = client.prepareIndex(index,type).setSource(param);
@@ -117,7 +119,7 @@ public class ESUtil {
      * @return
      */
     public static DeleteResponse delete(String index,String type,String id){
-        return getClient().prepareDelete(index,type,id).setRefresh(true).get();
+        return getClient().getClient().prepareDelete(index,type,id).setRefresh(true).get();
     }
 
     /**
@@ -128,7 +130,7 @@ public class ESUtil {
      * @return
      */
     public static BulkResponse delete(String index, String type, String ...ids){
-        Client client = getClient();
+        Client client = getClient().getClient();
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
         for(String id:ids){
             DeleteRequestBuilder delBuilder = client.prepareDelete(index,type,id);
@@ -157,7 +159,7 @@ public class ESUtil {
      * @return
      */
     public static BulkResponse update(String index,String type,String[] ids,Map params){
-        Client client = getClient();
+        Client client = getClient().getClient();
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
         for(String id:ids){
             UpdateRequestBuilder update = client.prepareUpdate(index,type,id);
@@ -174,7 +176,7 @@ public class ESUtil {
      * @return
      */
     public static UpdateResponse update(String index,String type,String id,Map params,boolean upsert){
-        return getClient().prepareUpdate(index,type,id)
+        return getClient().getClient().prepareUpdate(index,type,id)
                 .setDocAsUpsert(upsert)
                 .setRefresh(true).setDoc(params).get();
     }
@@ -187,7 +189,7 @@ public class ESUtil {
      * @return
      */
     public static GetResponse get(String index, String type, String id){
-        return getClient().prepareGet(index,type,id).get();
+        return getClient().getClient().prepareGet(index,type,id).get();
     }
     /**
      *通过文档id查询,批量操作
@@ -208,7 +210,7 @@ public class ESUtil {
      * @return
      */
     public static Map get(String[] index,String[] types,String ...ids){
-        Client client = getClient();
+        Client client = getClient().getClient();
         SearchRequestBuilder builder = client.prepareSearch(index).setSearchType(SearchType.DFS_QUERY_AND_FETCH);
         if(types!=null&&types.length>0){
             builder.setTypes(types);
@@ -234,7 +236,7 @@ public class ESUtil {
      * @return Map
      */
     public static SearchResponse selectListResponse(String[] index,String[] types,List<ElasticsearchField> params){
-        Client client = getClient();
+        Client client = getClient().getClient();
         SearchRequestBuilder builder = client.prepareSearch(index).setTypes(types).setSearchType(SearchType.DFS_QUERY_AND_FETCH);
         builder.setVersion(true);
         buildQueryFiled(builder,params);
@@ -271,7 +273,7 @@ public class ESUtil {
             throw new RuntimeException("keepAlive 不能为空");
         }
         if(size<=0)throw new RuntimeException("size必须是一个正整数");
-        Client client = getClient();
+        Client client = getClient().getClient();
         if(StringUtils.isBlank(scrollId)){
             SearchRequestBuilder builder = client.prepareSearch(index).setTypes(types).setScroll(keepAlive).setSearchType(SearchType.DFS_QUERY_AND_FETCH);
             builder.setVersion(true);

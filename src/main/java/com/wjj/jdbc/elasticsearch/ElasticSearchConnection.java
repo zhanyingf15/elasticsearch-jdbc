@@ -1,34 +1,33 @@
 package com.wjj.jdbc.elasticsearch;
 
+import com.wjj.jdbc.schedule.ESClient;
+import com.wjj.jdbc.schedule.HeartBeatsSchedule;
 import com.wjj.jdbc.util.ESUtil;
 import com.wjj.jdbc.util.LOG;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.slf4j.Logger;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.sql.*;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Executor;
+import java.util.concurrent.*;
 
 /**
  * Created by wjj on 2017/5/26.
  */
 public class ElasticSearchConnection implements Connection{
     public static Logger logger = LOG.getLogger(ElasticSearchConnection.class);
-    private Client client;
+    private ESClient client;
     public ElasticSearchConnection(String jdbcUrl){
         client = ESUtil.getNewClient(jdbcUrl);
+        HeartBeatsSchedule.registryClient(client,jdbcUrl);
     }
     public Client getClient(){
-        return this.client;
+        return this.client.getClient();
     }
     @Override
     public void close() throws SQLException {
+        HeartBeatsSchedule.unRegistryClient(this.client);
         this.client.close();
         this.client = null;
         logger.debug("close elasticsearch connection");

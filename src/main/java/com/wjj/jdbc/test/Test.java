@@ -1,6 +1,8 @@
 package com.wjj.jdbc.test;
 
 import io.searchbox.core.SearchResult;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,6 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 
 public class Test {
     public static void testJDBC() throws Exception{
@@ -20,6 +23,7 @@ public class Test {
         while (rs.next()){
             System.out.println("firstname:"+rs.getString("firstname")+",balance:"+rs.getInt("balance"));
         }
+        conn.close();
     }
     public static void main(String[] args) throws Exception{
         testJDBC();
