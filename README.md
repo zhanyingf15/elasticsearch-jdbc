@@ -5,6 +5,8 @@
 由于和Druid数据库连接池耦合太大，在使用过程中发现了一系列问题，决定将JDBC和数据库连接池解耦。添加ElasticSearchDriver类可以直接使用Class.forName加载驱动。 
 
 3.0.0版本不再使用elasticsearch-sql实验项目关于数据库连接池的部分，依旧沿用sql解析部分的代码
+### Upgrade
+3.0.1 TransportClient 增加心跳监测，解决连接超时的问题
 ### 使用方式
 
 ####  maven依赖
