@@ -81,6 +81,8 @@ java.url=jdbc:elasticsearch://192.168.70.128:9300
 http.url=http://192.168.70.128:9200
 #max connection number
 maxActive=20
+#cluster name，ignored if you not setting
+cluster.name=elasticsearch
 ```
 
 

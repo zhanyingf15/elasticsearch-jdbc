@@ -42,7 +42,14 @@ public class ESUtil {
             jdbcUrl = PropertiesUtil.getValue("java.url");
         }
         TransportClient transportClient = null;
-        Settings settings = Settings.builder().put("client.transport.ignore_cluster_name", true).build();
+        String clusterName = PropertiesUtil.getValue("cluster.name");
+        Settings.Builder builder = Settings.builder();
+        if(StringUtils.isBlank(clusterName)){
+            builder.put("client.transport.ignore_cluster_name", true);
+        }else{
+            builder.put("cluster.name", clusterName);
+        }
+        Settings settings = builder.build();
         try {
             transportClient = TransportClient.builder().settings(settings).build();
 
