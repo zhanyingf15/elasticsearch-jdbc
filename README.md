@@ -6,7 +6,7 @@
 
 3.0.0版本不再使用elasticsearch-sql实验项目关于数据库连接池的部分，依旧沿用sql解析部分的代码
 ### Upgrade
-3.0.1 TransportClient 增加心跳监测，解决连接超时的问题
+3.0.1 TransportClient 增加心跳监测，解决连接超时的问题。增加集群名配置
 ### 使用方式
 
 ####  maven依赖
@@ -81,6 +81,8 @@ java.url=jdbc:elasticsearch://192.168.70.128:9300
 http.url=http://192.168.70.128:9200
 #max connection number
 maxActive=20
+#cluster name，ignored if you not setting
+cluster.name=elasticsearch
 ```
 
 
